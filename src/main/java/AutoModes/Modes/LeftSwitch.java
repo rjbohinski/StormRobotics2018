@@ -1,10 +1,15 @@
 package AutoModes.Modes;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.kauailabs.navx.frc.AHRS;
+import AutoModes.Commands.IntakeTimed;
+import AutoModes.Commands.MoveForward;
+import AutoModes.Commands.PointTurn;
+import edu.wpi.first.wpilibj.command.CommandGroup;
 
-public class LeftSwitch {
-    public LeftSwitch(){
-
+public class LeftSwitch extends CommandGroup {
+    public LeftSwitch() {
+        addSequential(new MoveForward(150));
+        addSequential(new PointTurn(90), 3);
+        addSequential(new MoveForward(20.6), 3);
+        addSequential(new IntakeTimed(0, 3));
     }
 }

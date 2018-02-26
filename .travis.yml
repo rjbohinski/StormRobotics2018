@@ -2,6 +2,11 @@ language: java
 
 sudo: false
 
+install: true
+
+# before_install:
+#  - echo -n | openssl s_client -connect 'https://scan.coverity.com:443' | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
 addons:
   apt:
     packages:
@@ -11,12 +16,21 @@ jdk:
   - openjdk8
   - oraclejdk8
 
+script:
+  - git fetch --unshallow
+  - ./gradlew build
+  - ./gradlew sonarqube
+
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+  - rm -f  '$HOME/.gradle/caches/modules-2/modules-2.lock'
+  - rm -fr '$HOME/.gradle/caches/*/plugin-resolution/'
 
 cache:
   directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
+    - '$HOME/.gradle/caches/'
+    - '$HOME/.gradle/wrapper/'
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'
+    - '$HOME/.gradle'
+    - '.gradle'
 

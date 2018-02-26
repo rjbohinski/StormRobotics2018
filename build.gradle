@@ -2,7 +2,19 @@ plugins {
     id "java"
     id "eclipse"
     id "idea"
-    id "jaci.openrio.gradle.GradleRIO" version "2018.01.22"
+    id "jaci.openrio.gradle.GradleRIO" version "2018.02.17"
+    id "org.sonarqube" version "2.6"
+    // id "net.ltgt.errorprone" version "0.0.13"
+}
+
+compileJava {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:all"
+}
+
+compileTestJava {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:all"
 }
 
 def TEAM = 2729
@@ -23,6 +35,13 @@ deploy {
     }
 }
 
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 // Defining my dependencies. In this case, WPILib (+ friends), CTRE Toolsuite (Talon SRX)
 // and NavX.
 dependencies {
@@ -31,18 +50,23 @@ dependencies {
     compile navx()
 	compile openrio.powerup.matchData()
     compile pathfinder()
+
+    compile name: 'json-simple-1.1.1'
+//    errorprone 'com.google.errorprone:error_prone_core:2.2.0'
+
+    //runtime fileTree(dir: 'libs', include: '*.jar')
 }
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
-// knows where to look for our Robot Class.
+// knows where to look for our robot Class.
 jar {
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     manifest jaci.openrio.gradle.GradleRIOPlugin.javaManifest(ROBOT_CLASS)
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.4'
+    gradleVersion = '4.5'
 }
 
 // GradleRIO reports some anonymous data to aid in future development
@@ -54,3 +78,4 @@ task wrapper(type: Wrapper) {
 telemetry {
     reportTelemetry = false
 }
+

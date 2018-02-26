@@ -2,7 +2,9 @@ package Subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -13,35 +15,85 @@ public class NavX extends Subsystem {
         NavX.connect();
     }
 
-    private static void connect() {
+    private static synchronized boolean connect() {
         if (navx == null || !navx.isConnected()) {
+
             try {
-                navx = new AHRS(SPI.Port.kMXP);
-                System.out.println("NavX Connected: " + navx.isConnected());
-                SmartDashboard.putBoolean("NavX Connected", NavX.getNavx().isConnected());
-            } catch (RuntimeException ex ) {
-                DriverStation.reportError("Error instantiating navX MXP: " + ex.getMessage(), true);
+                return connectMXPSPI();
+            } catch (RuntimeException ex) {
+                // Failed to connect via MXP SPI, trying next option.
+            }
+            try {
+                return connectMXPI2C();
+            } catch (RuntimeException ex) {
+                // Failed to connect via MXP I2C, trying next option.
+            }
+            try {
+                return connectMXPSerial();
+            } catch (RuntimeException ex) {
+                // Failed to connect via MXP Serial. Throwing error.
+                System.err.println("Failed to connect to NavX on MXP SPI, I2C, or Serial!");
+                return false;
             }
         }
 
-        if (navx != null) {
+        return true;
+    }
+
+    private static synchronized boolean connectUSB() throws RuntimeException {
+        if (navx == null || !navx.isConnected()) {
+            navx = new AHRS(SerialPort.Port.kUSB);
+            System.out.println("NavX Connected: " + navx.isConnected());
+        }
+        return true;
+    }
+
+    private static synchronized boolean connectMXPSPI() throws RuntimeException {
+        if (navx == null || !navx.isConnected()) {
+            navx = new AHRS(SPI.Port.kMXP);
+            System.out.println("NavX Connected: " + navx.isConnected());
+        }
+        return true;
+    }
+
+    private static synchronized boolean connectMXPI2C() throws RuntimeException {
+        if (navx == null || !navx.isConnected()) {
+            navx = new AHRS(I2C.Port.kMXP);
+            System.out.println("NavX Connected: " + navx.isConnected());
+        }
+        return true;
+    }
+
+    private static synchronized boolean connectMXPSerial() throws RuntimeException {
+        if (navx == null || !navx.isConnected()) {
+            navx = new AHRS(SerialPort.Port.kMXP);
+            System.out.println("NavX Connected: " + navx.isConnected());
+        }
+        return true;
+    }
+
+    private static synchronized boolean connectI2C() throws RuntimeException {
+        if (navx == null || !navx.isConnected()) {
+            navx = new AHRS(I2C.Port.kOnboard);
+            System.out.println("NavX Connected: " + navx.isConnected());
+        }
+        return true;
+    }
+
+    public static synchronized void dashboardStats() {
+        try {
             SmartDashboard.putBoolean("NavX/Connected", NavX.getNavx().isConnected());
+            SmartDashboard.putNumber("NavX/Gyro/RawX", NavX.getNavx().getRawGyroX());
+            SmartDashboard.putNumber("NavX/Gyro/RawY", NavX.getNavx().getRawGyroY());
+            SmartDashboard.putNumber("NavX/Gyro/RawZ", NavX.getNavx().getRawGyroZ());
+            SmartDashboard.putNumber("NavX/Gyro/Angle", NavX.getNavx().getAngle());
+            SmartDashboard.putNumber("NavX/Gyro/AngleAdjustment", NavX.getNavx().getAngleAdjustment());
+            SmartDashboard.putNumber("NavX/Gyro/Yaw", NavX.getNavx().getYaw());
             SmartDashboard.putNumber("NavX/Gyro/Pitch", NavX.getNavx().getPitch());
             SmartDashboard.putNumber("NavX/Gyro/Roll", NavX.getNavx().getRoll());
-            SmartDashboard.putNumber("NavX/Gyro/Yaw", NavX.getNavx().getYaw());
-            SmartDashboard.putNumber("NavX/Altitude", NavX.getNavx().getAltitude());
-            SmartDashboard.putNumber("NavX/Displacement/X", NavX.getNavx().getDisplacementX());
-            SmartDashboard.putNumber("NavX/Displacement/Y", NavX.getNavx().getDisplacementY());
-            SmartDashboard.putNumber("NavX/Displacement/Z", NavX.getNavx().getDisplacementZ());
-            SmartDashboard.putNumber("NavX/CompassHeading", NavX.getNavx().getCompassHeading());
-            SmartDashboard.putNumber("NavX/Velocity/X", NavX.getNavx().getVelocityX());
-            SmartDashboard.putNumber("NavX/Velocity/Y", NavX.getNavx().getVelocityY());
-            SmartDashboard.putNumber("NavX/Velocity/Z", NavX.getNavx().getVelocityZ());
-            SmartDashboard.putNumber("NavX/BarometricPressure", NavX.getNavx().getBarometricPressure());
-            SmartDashboard.putNumber("NavX/Quaternion/W", NavX.getNavx().getQuaternionW());
-            SmartDashboard.putNumber("NavX/Quaternion/X", NavX.getNavx().getQuaternionX());
-            SmartDashboard.putNumber("NavX/Quaternion/Y", NavX.getNavx().getQuaternionY());
-            SmartDashboard.putNumber("NavX/Quaternion/Z", NavX.getNavx().getQuaternionZ());
+        } catch (NullPointerException npe) {
+            SmartDashboard.putBoolean("NavX/Connected", false);
+            NavX.connect();
         }
     }
 
@@ -56,10 +108,16 @@ public class NavX extends Subsystem {
         NavX.connect();
     }
 
-    public static AHRS getNavx() {
-        if (navx == null) {
-            NavX.connect();
+    /**
+     *
+     * @return
+     * @throws NullPointerException
+     */
+    public static synchronized AHRS getNavx() throws NullPointerException {
+        if (NavX.connect()) {
+            return navx;
+        } else {
+            throw new NullPointerException("Failed to connect to the NavX!");
         }
-        return navx;
     }
 }
