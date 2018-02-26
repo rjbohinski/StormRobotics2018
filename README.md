@@ -3,6 +3,7 @@
 2018 development code for FIRST Power Up
 
 [![Build Status](https://travis-ci.org/2729StormRobotics/StormRobotics2018.svg?branch=master)](https://travis-ci.org/2729StormRobotics/StormRobotics2018)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Frjbohinski%2FStormRobotics2018.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Frjbohinski%2FStormRobotics2018?ref=badge_shield)
 
 [![Coverity Scan](https://scan.coverity.com/projects/15040/badge.svg?flat=1)](https://scan.coverity.com/projects/2729stormrobotics-stormrobotics2018)
 
@@ -26,3 +27,7 @@ This repository only contains the source code and relevant java packages.  Every
 
 - ```gradlew build``` will build your robot Code  
 - ```gradlew deploy``` will build and deploy your code.
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Frjbohinski%2FStormRobotics2018.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Frjbohinski%2FStormRobotics2018?ref=badge_large)
